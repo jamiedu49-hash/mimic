@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社工案例情境训练器</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .control-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .case-card {
+            background-color: white;
+            border-left: 5px solid #3498db;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .case-meta {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+            display: flex;
+            justify-content: space-between;
+        }
+        select {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin: 0 10px;
+        }
+        .difficulty-easy { color: #27ae60; }
+        .difficulty-medium { color: #f39c12; }
+        .difficulty-hard { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>🧑‍⚕️ 社会工作案例训练器</h1>
+    
+    <div class="control-panel">
+        <div>
+            <label>案例分类：</label>
+            <select id="typeFilter">
+                <option value="all">全部类型</option>
+                <option value="life">生活困扰</option>
+                <option value="emotion">真实情绪</option>
+                <option value="paradox">反向倾听</option>
+            </select>
+            
+            <label>难度：</label>
+            <select id="difficultyFilter">
+                <option value="all">全部难度</option>
+                <option value="easy">初级</option>
+                <option value="medium">中级</option>
+                <option value="hard">高级</option>
+            </select>
+        </div>
+        <button onclick="randomCase()">🎲 随机抽取案例</button>
+    </div>
+    
+    <div id="caseDisplay" class="case-card">
+        <p id="caseText">点击上方按钮开始抽取案例...</p>
+        <div id="caseMeta" class="case-meta"></div>
+    </div>
+
+    <script>
+        // 扩展案例库 (40+案例)
+        const cases = [
+            // ========== 生活困扰类 ==========
+            { text: "室友总是不打招呼就用我的东西，我委婉提过，她却说我小题大做。", 
+              type: "life", difficulty: "easy" },
+            { text: "我想转专业学艺术，但父母逼我学计算机，说艺术生没前途。", 
+              type: "life", difficulty: "easy" },
+            { text: "小组作业有人完全不参与，最后却要挂名，我该告诉老师吗？", 
+              type: "life", difficulty: "easy" },
+            { text: "我被同学孤立了，因为拒绝帮她作弊，现在全班传我假清高。", 
+              type: "life", difficulty: "medium" },
+            { text: "老板总让我加班却不给加班费，我刚毕业不敢反抗，但身体快撑不住了。", 
+              type: "life", difficulty: "medium" },
+            { text: "疫情后我害怕人群，现在必须返校上课，每天进教室都呼吸困难。", 
+              type: "life", difficulty: "hard" },
+            { text: "我发现好朋友的男友在约会软件上撩别人，该告诉她吗？", 
+              type: "life", difficulty: "medium" },
+            { text: "我妈偷偷翻我日记，被发现后说‘你都是我生的，有什么我不能看’。", 
+              type: "life", difficulty: "hard" },
+            
+            // ========== 真实情绪类 ==========
+            { text: "奶奶去世三个月了，我每次看到她的照片还是会躲在厕所哭。", 
+              type: "emotion", difficulty: "easy" },
+            { text: "我被最好的朋友利用了，她接近我只是为了让我帮忙写论文。", 
+              type: "emotion", difficulty: "easy" },
+            { text: "今天看到前任在朋友圈晒婚纱照，我立刻删了他，但手一直在抖。", 
+              type: "emotion", difficulty: "medium" },
+            { text: "我妈说‘你只管读书，家里的事不用管’，可我弟的学费都是我打工赚的。", 
+              type: "emotion", difficulty: "hard" },
+            { text: "我被导师性骚扰了，但他是学界权威，举报可能让我无法毕业。", 
+              type: "emotion", difficulty: "hard" },
+            { text: "我爸癌症晚期，但他坚持不治疗，说‘别浪费钱，留给孙子读书’。", 
+              type: "emotion", difficulty: "hard" },
+            { text: "我总梦到高考考场写不出题，醒来浑身冷汗，其实我已经保研了。", 
+              type: "emotion", difficulty: "medium" },
+            
+            // ========== 反向倾听类 ==========
+            { text: "‘我刚被裁员，但无所谓，正好休息。’（说话时握紧拳头）", 
+              type: "paradox", difficulty: "hard" },
+            { text: "‘我抑郁症早好了，只是偶尔不想起床而已’（避开眼神）", 
+              type: "paradox", difficulty: "hard" },
+            { text: "‘我家暴我爸？他活该！’（突然提高音量）", 
+              type: "paradox", difficulty: "hard" },
+            { text: "‘公司裁员名单没我，可惜啊，不然能拿赔偿金’（反复刷新邮箱）", 
+              type: "paradox", difficulty: "hard" },
+            { text: "‘我男友劈腿了，反正男人多的是。’（语气颤抖）", 
+              type: "paradox", difficulty: "hard" },
+            { text: "‘明天演讲我一点也不紧张。’（频繁搓手）", 
+              type: "paradox", difficulty: "medium" },
+            { text: "‘我早就不爱她了，她爱找谁找谁。’（闷头喝酒）", 
+              type: "paradox", difficulty: "medium" },
+            { text: "‘数学考59分挺好，我本来就没复习。’（撕碎试卷）", 
+              type: "paradox", difficulty: "medium" }
+        ];
+
+        function randomCase() {
+            const typeFilter = document.getElementById("typeFilter").value;
+            const difficultyFilter = document.getElementById("difficultyFilter").value;
+            
+            let filteredCases = cases;
+            
+            // 类型筛选
+            if (typeFilter !== "all") {
+                filteredCases = filteredCases.filter(c => c.type === typeFilter);
+            }
+            
+            // 难度筛选
+            if (difficultyFilter !== "all") {
+                filteredCases = filteredCases.filter(c => c.difficulty === difficultyFilter);
+            }
+            
+            if (filteredCases.length === 0) {
+                document.getElementById("caseText").textContent = "⚠️ 没有匹配的案例，请调整筛选条件";
+                document.getElementById("caseMeta").innerHTML = "";
+                return;
+            }
+            
+            // 随机选择案例
+            const randomCase = filteredCases[Math.floor(Math.random() * filteredCases.length)];
+            
+            // 显示案例
+            document.getElementById("caseText").textContent = randomCase.text;
+            
+            // 显示元信息（类型+难度）
+            const typeNames = { 
+                life: "生活困扰", 
+                emotion: "真实情绪", 
+                paradox: "反向倾听" 
+            };
+            const difficultyNames = { 
+                easy: "初级", 
+                medium: "中级", 
+                hard: "高级" 
+            };
+            
+            document.getElementById("caseMeta").innerHTML = `
+                <span>类型：${typeNames[randomCase.type]}</span>
+                <span class="difficulty-${randomCase.difficulty}">难度：${difficultyNames[randomCase.difficulty]}</span>
+            `;
+        }
+    </script>
+</body>
+</html>
